@@ -8,6 +8,7 @@ define([
     'find/app/model/entity-collection',
     'find/app/model/documents-collection',
     'find/app/model/indexes-collection',
+    'find/app/model/fields-collection',
     'find/app/router',
     'find/app/vent',
     'i18n!find/nls/bundle',
@@ -20,7 +21,7 @@ define([
     'text!find/templates/app/page/index-popover-contents.html',
     'text!find/templates/app/page/top-results-popover-contents.html',
     'colorbox'
-], function(BasePage, EntityCollection, DocumentsCollection, IndexesCollection, router, vent, i18n, template, resultsTemplate,
+], function(BasePage, EntityCollection, DocumentsCollection, IndexesCollection, FieldsCollection, router, vent, i18n, template, resultsTemplate,
             suggestionsTemplate, loadingSpinnerTemplate, colorboxControlsTemplate, indexPopover, indexPopoverContents, topResultsPopoverContents) {
 
     return BasePage.extend({
