@@ -34,9 +34,10 @@ public class FieldValuesServiceImpl implements FieldValuesService {
         parameters.put("text", text);
         parameters.put("index", index);
         parameters.put("fieldname", fieldname);
+        parameters.put("sort", sort);
         parameters.put("apikey", apiKeyService.getApiKey());
 
-        return restTemplate.getForObject("https://api.idolondemand.com/1/api/sync/getparametricvalues/v1?apikey={apikey}&oindex={index}&sort={sort}&max_values={max_values}&fieldname={fieldname}", FieldValues.class, parameters);
+        return restTemplate.getForObject("https://api.idolondemand.com/1/api/sync/getparametricvalues/v1?apikey={apikey}&indexes={index}&sort={sort}&max_values={max_values}&field_name={fieldname}", FieldValues.class, parameters);
 
     }
 
