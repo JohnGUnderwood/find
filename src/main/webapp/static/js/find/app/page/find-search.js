@@ -8,7 +8,7 @@ define([
     'find/app/model/entity-collection',
     'find/app/model/documents-collection',
     'find/app/model/indexes-collection',
-    'find/app/model/fields-collection',
+    'find/app/model/fields-model',
     'find/app/router',
     'find/app/vent',
     'i18n!find/nls/bundle',
@@ -20,9 +20,10 @@ define([
     'text!find/templates/app/page/index-popover.html',
     'text!find/templates/app/page/index-popover-contents.html',
     'text!find/templates/app/page/top-results-popover-contents.html',
+    'text!find/templates/app/page/parametric-container.html',
     'colorbox'
-], function(BasePage, EntityCollection, DocumentsCollection, IndexesCollection, FieldsCollection, router, vent, i18n, template, resultsTemplate,
-            suggestionsTemplate, loadingSpinnerTemplate, colorboxControlsTemplate, indexPopover, indexPopoverContents, topResultsPopoverContents) {
+], function(BasePage, EntityCollection, DocumentsCollection, IndexesCollection, FieldsModel, router, vent, i18n, template, resultsTemplate,
+            suggestionsTemplate, loadingSpinnerTemplate, colorboxControlsTemplate, indexPopover, indexPopoverContents, topResultsPopoverContents, parametricContainer) {
 
     return BasePage.extend({
 
@@ -33,6 +34,7 @@ define([
         indexPopover: _.template(indexPopover),
         indexPopoverContents: _.template(indexPopoverContents),
         topResultsPopoverContents: _.template(topResultsPopoverContents),
+        parametricContainer: _.template(parametricContainer),
 
         events: {
             'keyup .find-input': 'keyupAnimation',
@@ -75,6 +77,7 @@ define([
             this.documentsCollection = new DocumentsCollection();
             this.topResultsCollection = new DocumentsCollection();
             this.indexesCollection = new IndexesCollection();
+            this.fieldsModel = new FieldsModel();
 
             router.on('route:search', function(text) {
                 this.entityCollection.reset();
@@ -233,6 +236,20 @@ define([
                 }
             });
 
+            /*parametric filters*/
+            this.listenTo(this.fieldsModel, 'change', function(model) {
+
+                var fields = model.get("all_fields");
+
+                _.each(fields, function(field) {
+                    this.$('.parametric-filters').append(_.template(parametricContainer, {
+                        field: field
+                    }));
+                }, this);
+
+            });
+
+
             /*colorbox fancy button override*/
             $('#colorbox').append(_.template(colorboxControlsTemplate));
             $('.nextBtn').on('click', this.handleNextResult);
@@ -308,6 +325,15 @@ define([
                     data: {
                         text: input,
                         index: this.index
+                    }
+                });
+
+                this.fieldsModel.fetch({
+                    data: {
+                        index: this.index,
+                        group_fields_by_type: true,
+                        fieldtype: ["parametric"],
+                        max_values: 1000
                     }
                 });
 
