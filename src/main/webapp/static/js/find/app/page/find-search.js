@@ -9,6 +9,7 @@ define([
     'find/app/model/documents-collection',
     'find/app/model/indexes-collection',
     'find/app/model/fields-model',
+    'find/app/model/values-collection.js',
     'find/app/router',
     'find/app/vent',
     'i18n!find/nls/bundle',
@@ -22,7 +23,7 @@ define([
     'text!find/templates/app/page/top-results-popover-contents.html',
     'text!find/templates/app/page/parametric-container.html',
     'colorbox'
-], function(BasePage, EntityCollection, DocumentsCollection, IndexesCollection, FieldsModel, router, vent, i18n, template, resultsTemplate,
+], function(BasePage, EntityCollection, DocumentsCollection, IndexesCollection, FieldsModel, ValuesCollection, router, vent, i18n, template, resultsTemplate,
             suggestionsTemplate, loadingSpinnerTemplate, colorboxControlsTemplate, indexPopover, indexPopoverContents, topResultsPopoverContents, parametricContainer) {
 
     return BasePage.extend({
@@ -78,6 +79,7 @@ define([
             this.topResultsCollection = new DocumentsCollection();
             this.indexesCollection = new IndexesCollection();
             this.fieldsModel = new FieldsModel();
+            this.valuesCollection = new ValuesCollection();
 
             router.on('route:search', function(text) {
                 this.entityCollection.reset();
@@ -241,11 +243,12 @@ define([
 
                 var fields = model.get("all_fields");
 
-                _.each(fields, function(field) {
+               // _.each(fields, function(field) {
                     this.$('.parametric-filters').append(_.template(parametricContainer, {
-                        field: field
+                        //field: field
+                        fields: fields
                     }));
-                }, this);
+                //}, this);
 
             });
 

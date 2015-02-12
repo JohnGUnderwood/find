@@ -1,3 +1,5 @@
-<div class="parametric-fields span2">
-    <%-field %>
-</div>
+<ul class="parametric-fields span2">
+    <% _.each(fields, function(field) { %>
+        <li><%- field %></li>
+    <% }); %>
+</ul>
