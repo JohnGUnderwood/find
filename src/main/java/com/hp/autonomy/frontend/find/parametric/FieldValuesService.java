@@ -12,5 +12,5 @@ import java.util.List;
 
 public interface FieldValuesService {
 
-    FieldValues getParametricValues(String index, String text, String fieldname, int max_values, String sort);
+    FieldValues getParametricValues(String index, String text, String fieldname, int max_values, String sort, String fieldtext);
 }

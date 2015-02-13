@@ -28,16 +28,17 @@ public class FieldValuesServiceImpl implements FieldValuesService {
     private ApiKeyService apiKeyService;
 
     @Override
-    public FieldValues getParametricValues(String index, String text, String fieldname, int max_values, String sort) {
+    public FieldValues getParametricValues(String index, String text, String fieldname, int max_values, String sort, String fieldtext) {
         final Map<String, Object> parameters = new HashMap<>();
         parameters.put("max_values", max_values);
         parameters.put("text", text);
         parameters.put("index", index);
         parameters.put("fieldname", fieldname);
         parameters.put("sort", sort);
+        parameters.put("fieldtext", fieldtext);
         parameters.put("apikey", apiKeyService.getApiKey());
 
-        return restTemplate.getForObject("https://api.idolondemand.com/1/api/sync/getparametricvalues/v1?apikey={apikey}&indexes={index}&sort={sort}&max_values={max_values}&field_name={fieldname}", FieldValues.class, parameters);
+        return restTemplate.getForObject("https://api.idolondemand.com/1/api/sync/getparametricvalues/v1?apikey={apikey}&indexes={index}&sort={sort}&max_values={max_values}&field_name={fieldname}&text={text}&field_text={fieldtext}", FieldValues.class, parameters);
 
     }
 

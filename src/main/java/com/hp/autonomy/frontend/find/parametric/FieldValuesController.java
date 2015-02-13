@@ -31,8 +31,10 @@ public class FieldValuesController {
             @RequestParam("text") final String text,
             @RequestParam("fieldname") final String fieldname,
             @RequestParam("max_values") final int max_values,
-            @RequestParam("sort") final String sort
+            @RequestParam("sort") final String sort,
+            //naive field text parameter constructor. Expects 'String' of type <Operation>{<Value>}:<field,field,..>
+            @RequestParam(value = "fieldtext", required = false) final String fieldtext
     ) {
-        return fieldValuesService.getParametricValues(index, text, fieldname, max_values, sort);
+        return fieldValuesService.getParametricValues(index, text, fieldname, max_values, sort, fieldtext);
     }
 }
