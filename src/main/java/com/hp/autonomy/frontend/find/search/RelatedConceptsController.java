@@ -25,9 +25,11 @@ public class RelatedConceptsController {
     @ResponseBody
     public List<Entity> findRelatedConcepts(
             @RequestParam("text") final String text,
-            @RequestParam(value = "index") final String index
+            @RequestParam(value = "index") final String index,
+            //naive field text parameter constructor. Expects 'String' of type <Operation>{<Value>}:<field,field,..>
+            @RequestParam(value = "fieldtext", required = false) final String fieldtext
     ) {
-        return relatedConceptsService.findRelatedConcepts(text, index);
+        return relatedConceptsService.findRelatedConcepts(text, index, fieldtext);
     }
 
 }
