@@ -1,5 +1,11 @@
+<style type="text/css">
+    .parametric-values {display: block}
+</style>
 <ul class="parametric-fields span2">
-    <% _.each(fields, function(field) { %>
-        <li><%- field %></li>
+    <% _.each(fields, function(field) {
+        field = field.replace("DOCUMENT/","");%>
+        <li><a class="parametric-field-name"><%-field %></a>
+            <ul class="parametric-values" data-fieldName="<%-field %>"></ul>
+        </li>
     <% }); %>
 </ul>

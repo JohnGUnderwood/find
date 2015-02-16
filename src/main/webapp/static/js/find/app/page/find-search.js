@@ -9,7 +9,7 @@ define([
     'find/app/model/documents-collection',
     'find/app/model/indexes-collection',
     'find/app/model/fields-model',
-    'find/app/model/values-collection.js',
+    'find/app/model/fieldvalues-model',
     'find/app/router',
     'find/app/vent',
     'i18n!find/nls/bundle',
@@ -23,7 +23,7 @@ define([
     'text!find/templates/app/page/top-results-popover-contents.html',
     'text!find/templates/app/page/parametric-container.html',
     'colorbox'
-], function(BasePage, EntityCollection, DocumentsCollection, IndexesCollection, FieldsModel, ValuesCollection, router, vent, i18n, template, resultsTemplate,
+], function(BasePage, EntityCollection, DocumentsCollection, IndexesCollection, FieldsModel, FieldValuesModel, router, vent, i18n, template, resultsTemplate,
             suggestionsTemplate, loadingSpinnerTemplate, colorboxControlsTemplate, indexPopover, indexPopoverContents, topResultsPopoverContents, parametricContainer) {
 
     return BasePage.extend({
@@ -70,6 +70,14 @@ define([
             'mouseleave .entity-to-summary': function() {
                 this.$('.suggestions-content li a').removeClass('label label-primary entity-to-summary');
                 this.$('.main-results-content .entity-to-summary').removeClass('label-primary').addClass('label-info');
+            },
+            'click .parametric-field-name': function(e) {
+                if ($(e.currentTarget).siblings('.parametric-values').css('display') == "none" ) {
+                    $(e.currentTarget).siblings('.parametric-values').show();
+                }else {
+                    $(e.currentTarget).siblings('.parametric-values').hide();
+                }
+
             }
         },
 
@@ -79,7 +87,7 @@ define([
             this.topResultsCollection = new DocumentsCollection();
             this.indexesCollection = new IndexesCollection();
             this.fieldsModel = new FieldsModel();
-            this.valuesCollection = new ValuesCollection();
+            this.fieldValuesModel = new FieldValuesModel();
 
             router.on('route:search', function(text) {
                 this.entityCollection.reset();
@@ -239,19 +247,35 @@ define([
             });
 
             /*parametric filters*/
-            this.listenTo(this.fieldsModel, 'change', function(model) {
+            this.listenTo(this.fieldValuesModel, 'change', function(model) {
 
-                var fields = model.get("all_fields");
+                var fields = model.keys();
 
-               // _.each(fields, function(field) {
-                    this.$('.parametric-filters').append(_.template(parametricContainer, {
-                        //field: field
-                        fields: fields
-                    }));
-                //}, this);
+                _.each(fields, function(field) {
+                    var values = model.get(field);
+                    this.$('[data-fieldName="'+field+'"]').empty();
 
+                    _.each(_.pairs(values), function(value){
+                        $newValue = '<li class="param-value" data-fieldValue="' + value[0] + '"><label class="param-value checkbox"><input type="checkbox">'+value[0]+'&nbsp['+value[1]+']</label></li>';
+                        this.$('[data-fieldName="'+field+'"]').append($newValue);
+                    }, this);
+                }, this);
             });
 
+            this.listenTo(this.fieldsModel, 'change', function(model) {
+                var fields = model.get("all_fields");
+
+                this.$('.parametric-filters').append(_.template(parametricContainer, {
+                    fields: fields
+                }));
+
+                var fieldName = _.map(fields, function(field) {
+                    return field.replace("DOCUMENT/","");
+                }).join(',')
+
+                this.parametricRequest(this.$('.find-input').val(),fieldName);
+
+            });
 
             /*colorbox fancy button override*/
             $('#colorbox').append(_.template(colorboxControlsTemplate));
@@ -314,10 +338,13 @@ define([
         },
 
         searchRequest: function(input) {
+            var fieldText = this.buildFieldTextFromParams();
+//            var fieldText = null;
             if (this.index) {
                 this.documentsCollection.fetch({
                     data: {
                         text: input,
+                        fieldtext: fieldText,
                         max_results: 30,
                         summary: 'quick',
                         index: this.index
@@ -327,9 +354,10 @@ define([
                 this.entityCollection.fetch({
                     data: {
                         text: input,
+                        fieldtext: fieldText,
                         index: this.index
                     }
-                });
+                }, this);
 
                 this.fieldsModel.fetch({
                     data: {
@@ -337,8 +365,16 @@ define([
                         group_fields_by_type: true,
                         fieldtype: ["parametric"],
                         max_values: 1000
-                    }
-                });
+                    },
+                }, this)
+
+                var parametricFields = this.fieldsModel.get('all_fields')
+
+                if(parametricFields) {
+                    this.parametricRequest(input, _.map(parametricFields, function(field) {
+                        return field.replace("DOCUMENT/","");
+                    }).join(','))
+                }
 
                 vent.navigate('find/search/' + encodeURIComponent(input), {trigger: false});
             }
@@ -346,6 +382,41 @@ define([
                 this.indexesCollection.once('sync', function() {
                     this.searchRequest(input);
                 }, this);
+            }
+        },
+
+        parametricRequest: function(text,fieldName){
+            var fieldText = this.buildFieldTextFromParams();
+//            var fieldText = null;
+            this.fieldValuesModel.fetch({
+                data: {
+                    index: this.index,
+                    text: text,
+                    fieldtext: fieldText,
+                    fieldname: fieldName,
+                    max_values: 20,
+                    sort: "alphabetical"
+                }
+            }, this);
+        },
+
+        buildFieldTextFromParams: function(){
+            if ($('ul.parametric-values').length){
+                var paramFields = $('ul.parametric-values');
+
+                return _.chain(paramFields).map(function(ul) {
+                    var $ul = $(ul)
+                    var fieldName = $ul.attr('data-fieldName')
+
+                    return _.chain($ul.find('li')).filter(function(li) {
+                        return $(li).find('input').prop('checked');
+                    }).map(function(li) {
+                        return 'MATCH{' + $(li).attr('data-fieldValue') + '}:' + fieldName
+                    }).value();
+                }).flatten().value().join('+AND+');
+            }
+            else{
+                return null;
             }
         }
     });
