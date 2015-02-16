@@ -7,9 +7,9 @@ define([
     'backbone'
 ], function(Backbone) {
 
-    return Backbone.Collection.extend({
+    return Backbone.Model.extend({
 
-        url: '../api/parametric/get-parametric-values'
+        url: '../api/parametric/get-parametric-values',
 
     })
 
