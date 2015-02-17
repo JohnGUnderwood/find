@@ -22,9 +22,12 @@ define([
     'text!find/templates/app/page/index-popover-contents.html',
     'text!find/templates/app/page/top-results-popover-contents.html',
     'text!find/templates/app/page/parametric-container.html',
+    'text!find/templates/app/page/parametric-value-container.html',
+    'text!find/templates/app/page/adverts.html',
     'colorbox'
 ], function(BasePage, EntityCollection, DocumentsCollection, IndexesCollection, FieldsModel, FieldValuesModel, router, vent, i18n, template, resultsTemplate,
-            suggestionsTemplate, loadingSpinnerTemplate, colorboxControlsTemplate, indexPopover, indexPopoverContents, topResultsPopoverContents, parametricContainer) {
+            suggestionsTemplate, loadingSpinnerTemplate, colorboxControlsTemplate, indexPopover, indexPopoverContents, topResultsPopoverContents, parametricContainer,
+            paramValContainer, advertsTemplate) {
 
     return BasePage.extend({
 
@@ -36,6 +39,8 @@ define([
         indexPopoverContents: _.template(indexPopoverContents),
         topResultsPopoverContents: _.template(topResultsPopoverContents),
         parametricContainer: _.template(parametricContainer),
+        paramValContainer: _.template(paramValContainer),
+        advertsTemplate: _.template(advertsTemplate),
 
         events: {
             'keyup .find-input': 'keyupAnimation',
@@ -196,15 +201,21 @@ define([
                 }
 
                 this.$('.main-results-content .no-results').remove();
+
+                this.$('.adverts-container').append(_.template(advertsTemplate))
+
             });
 
             this.listenTo(this.documentsCollection, 'add', function(model) {
                 var reference = model.get('reference');
                 var summary = model.get('summary');
+                var description = model.get('description');
 
-                summary = this.addLinksToSummary(summary);
-
-                this.$('.main-results-content .loading-spinner').remove();
+                if(description.length < 100){
+                    summary = this.addLinksToSummary(summary);
+                }else {
+                    summary = this.addLinksToSummary(description);
+                }
 
                 var $newResult = $(_.template(resultsTemplate ,{
                     title: model.get('title'),
@@ -231,6 +242,7 @@ define([
                     e.preventDefault();
                     $newResult.find('.result-header').trigger('click'); //dot-dot-dot triggers the colorbox event
                 });
+
             });
 
             this.listenTo(this.documentsCollection, 'remove', function(model) {
@@ -248,7 +260,6 @@ define([
 
             /*parametric filters*/
             this.listenTo(this.fieldValuesModel, 'change', function(model) {
-
                 var fields = model.keys();
 
                 _.each(fields, function(field) {
@@ -256,9 +267,14 @@ define([
                     this.$('[data-fieldName="'+field+'"]').empty();
 
                     _.each(_.pairs(values), function(value){
-                        $newValue = '<li class="param-value" data-fieldValue="' + value[0] + '"><label class="param-value checkbox"><input type="checkbox">'+value[0]+'&nbsp['+value[1]+']</label></li>';
-                        this.$('[data-fieldName="'+field+'"]').append($newValue);
+                        this.$('[data-fieldName="'+field+'"]').append(_.template(paramValContainer, {
+                            value : value
+                        }));
+                        if (_.indexOf(this.fieldTextParams[field], value[0]) > -1) {
+                            this.$('[data-fieldValue="'+value[0]+'"]').find('input').prop('checked', true);
+                        }
                     }, this);
+
                 }, this);
             });
 
@@ -338,23 +354,24 @@ define([
         },
 
         searchRequest: function(input) {
-            var fieldText = this.buildFieldTextFromParams();
-//            var fieldText = null;
+            //
+            this.fieldText = this.buildFieldTextFromParams();
             if (this.index) {
                 this.documentsCollection.fetch({
                     data: {
                         text: input,
-                        fieldtext: fieldText,
+                        fieldtext: this.fieldText,
                         max_results: 30,
                         summary: 'quick',
-                        index: this.index
+                        index: this.index,
+                        print: 'all'
                     }
                 }, this);
 
                 this.entityCollection.fetch({
                     data: {
                         text: input,
-                        fieldtext: fieldText,
+                        fieldtext: this.fieldText,
                         index: this.index
                     }
                 }, this);
@@ -386,13 +403,12 @@ define([
         },
 
         parametricRequest: function(text,fieldName){
-            var fieldText = this.buildFieldTextFromParams();
-//            var fieldText = null;
+            this.fieldText = this.buildFieldTextFromParams();
             this.fieldValuesModel.fetch({
                 data: {
                     index: this.index,
                     text: text,
-                    fieldtext: fieldText,
+                    fieldtext: this.fieldText,
                     fieldname: fieldName,
                     max_values: 20,
                     sort: "alphabetical"
@@ -404,16 +420,21 @@ define([
             if ($('ul.parametric-values').length){
                 var paramFields = $('ul.parametric-values');
 
+                this.fieldTextParams = new Object();
+
                 return _.chain(paramFields).map(function(ul) {
                     var $ul = $(ul)
                     var fieldName = $ul.attr('data-fieldName')
 
+                    this.fieldTextParams[fieldName] = new Array();
+
                     return _.chain($ul.find('li')).filter(function(li) {
                         return $(li).find('input').prop('checked');
-                    }).map(function(li) {
+                    }, this).map(function(li) {
+                        this.fieldTextParams[fieldName].push($(li).attr('data-fieldValue'));
                         return 'MATCH{' + $(li).attr('data-fieldValue') + '}:' + fieldName
-                    }).value();
-                }).flatten().value().join('+AND+');
+                    }, this).value();
+                }, this).flatten().value().join('+AND+');
             }
             else{
                 return null;
