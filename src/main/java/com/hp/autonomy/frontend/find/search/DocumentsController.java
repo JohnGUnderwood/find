@@ -29,9 +29,11 @@ public class DocumentsController {
         @RequestParam("summary") final String summary,
         @RequestParam("index") final String index,
         //naive field text parameter constructor. Expects 'String' of type <Operation>{<Value>}:<field,field,..>
-        @RequestParam(value = "fieldtext", required = false) final String fieldtext
+        @RequestParam(value = "fieldtext", required = false) final String fieldtext,
+        @RequestParam(value = "print", required = false) final String print,
+        @RequestParam(value = "print_fields", required = false) final String print_fields
     ) {
-        return documentsService.queryTextIndex(text, maxResults, summary, index, fieldtext);
+        return documentsService.queryTextIndex(text, maxResults, summary, index, fieldtext, print, print_fields);
     }
 
 }
