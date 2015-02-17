@@ -40,7 +40,6 @@ define([
         topResultsPopoverContents: _.template(topResultsPopoverContents),
         parametricContainer: _.template(parametricContainer),
         paramValContainer: _.template(paramValContainer),
-        advertsTemplate: _.template(advertsTemplate),
 
         events: {
             'keyup .find-input': 'keyupAnimation',
@@ -201,9 +200,6 @@ define([
                 }
 
                 this.$('.main-results-content .no-results').remove();
-
-                this.$('.adverts-container').append(_.template(advertsTemplate))
-
             });
 
             this.listenTo(this.documentsCollection, 'add', function(model) {
@@ -354,7 +350,6 @@ define([
         },
 
         searchRequest: function(input) {
-            //
             this.fieldText = this.buildFieldTextFromParams();
             if (this.index) {
                 this.documentsCollection.fetch({
@@ -394,6 +389,10 @@ define([
                 }
 
                 vent.navigate('find/search/' + encodeURIComponent(input), {trigger: false});
+
+                this.$('.adverts-container').empty();
+                this.$('.adverts-container').append(_.template(advertsTemplate));
+
             }
             else {
                 this.indexesCollection.once('sync', function() {
