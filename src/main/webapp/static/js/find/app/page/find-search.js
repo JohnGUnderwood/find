@@ -226,7 +226,7 @@ define([
                     iframe: true,
                     width:'70%',
                     height:'70%',
-                    href: reference,
+                    href: '../api/view/view-document?' + $.param({reference: reference}),
                     rel: 'results',
                     current: '{current} of {total}',
                     onComplete: _.bind(function() {
