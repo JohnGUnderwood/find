@@ -23,11 +23,10 @@ define([
     'text!find/templates/app/page/top-results-popover-contents.html',
     'text!find/templates/app/page/parametric-container.html',
     'text!find/templates/app/page/parametric-value-container.html',
-    'text!find/templates/app/page/adverts.html',
     'colorbox'
 ], function(BasePage, EntityCollection, DocumentsCollection, IndexesCollection, FieldsModel, FieldValuesModel, router, vent, i18n, template, resultsTemplate,
             suggestionsTemplate, loadingSpinnerTemplate, colorboxControlsTemplate, indexPopover, indexPopoverContents, topResultsPopoverContents, parametricContainer,
-            paramValContainer, advertsTemplate) {
+            paramValContainer) {
 
     return BasePage.extend({
 
@@ -389,10 +388,7 @@ define([
                 }
 
                 vent.navigate('find/search/' + encodeURIComponent(input), {trigger: false});
-
-                this.$('.adverts-container').empty();
-                this.$('.adverts-container').append(_.template(advertsTemplate));
-
+                
             }
             else {
                 this.indexesCollection.once('sync', function() {
